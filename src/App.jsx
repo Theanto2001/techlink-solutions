@@ -1,516 +1,242 @@
+import { useRef, useState } from "react";
+
 import { motion } from "framer-motion";
-import { useState, useRef, useEffect } from "react";
 
-import emailjs from "@emailjs/browser";
+import {
+  FaWhatsapp,
+  FaFacebook,
+  FaTools,
+  FaLaptopCode,
+  FaShieldAlt,
+} from "react-icons/fa";
 
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster, toast } from "react-hot-toast";
 
-import Particles from "react-tsparticles";
-import { loadFull } from "tsparticles";
+import db from "./firebase/firestore";
 
-import { FaWhatsapp, FaLaptopCode, FaTools, FaShieldAlt } from "react-icons/fa";
-
-import { Menu, X } from "lucide-react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export default function App() {
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [pageLoading, setPageLoading] = useState(true);
-
   const form = useRef();
 
-  const particlesInit = async (main) => {
-    await loadFull(main);
-  };
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setPageLoading(false);
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  const sendEmail = (e) => {
+  const sendEmail = async (e) => {
     e.preventDefault();
 
     setLoading(true);
 
-    emailjs
-      .sendForm(
-        "service_z26k8le",
-        "template_kzq1hbl",
-        form.current,
-        "gWmDrQ3-UFd_NLN3a",
-      )
-      .then(
-        () => {
-          toast.success("Solicitud enviada correctamente 🚀");
+    try {
+      const formData = new FormData(form.current);
 
-          form.current.reset();
+      const ticketData = {
+        name: formData.get("name"),
 
-          setLoading(false);
-        },
-        () => {
-          toast.error("Ocurrió un error ❌");
+        email: formData.get("email"),
 
-          setLoading(false);
-        },
-      );
+        message: formData.get("message"),
+
+        status: "Pendiente",
+
+        createdAt: serverTimestamp(),
+      };
+
+      await addDoc(collection(db, "tickets"), ticketData);
+
+      toast.success("Solicitud enviada correctamente 🔥");
+
+      form.current.reset();
+    } catch (error) {
+      console.log(error);
+
+      toast.error("Error al enviar solicitud");
+    }
+
+    setLoading(false);
   };
 
   return (
-    <>
-      {/* Loader */}
-      {pageLoading && (
-        <motion.div
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black z-[9999] flex flex-col items-center justify-center"
+    <div className="bg-black text-white min-h-screen overflow-hidden">
+      <Toaster position="top-right" />
+
+      {/* Glow */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-blue-500/20 blur-3xl rounded-full"></div>
+
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-cyan-500/20 blur-3xl rounded-full"></div>
+      </div>
+
+      {/* Hero */}
+      <section className="min-h-screen flex flex-col items-center justify-center text-center px-6">
+        <motion.h1
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1 }}
+          className="text-6xl md:text-8xl font-black mb-8"
         >
-          <div className="absolute w-72 h-72 bg-blue-500/20 blur-3xl rounded-full"></div>
+          TechLink <span className="text-blue-400">Solutions</span>
+        </motion.h1>
 
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1 }}
-            className="relative text-5xl md:text-7xl font-black tracking-wide"
-          >
-            TechLink <span className="text-blue-400">Solutions</span>
-          </motion.h1>
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-white/60 text-xl max-w-2xl mb-10"
+        >
+          Soluciones tecnológicas profesionales para computadoras, redes,
+          mantenimiento y soporte técnico.
+        </motion.p>
 
-          <div className="relative mt-10 w-64 h-2 bg-white/10 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: "100%" }}
-              transition={{ duration: 2 }}
-              className="h-full bg-blue-400 rounded-full"
-            ></motion.div>
-          </div>
+        <motion.a
+          whileHover={{ scale: 1.05 }}
+          href="#contacto"
+          className="bg-blue-500 hover:bg-blue-400 transition-all px-10 py-5 rounded-3xl text-xl font-semibold shadow-2xl shadow-blue-500/30"
+        >
+          Solicitar servicio
+        </motion.a>
+      </section>
 
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-white/50 mt-6 tracking-[0.3em] uppercase text-sm"
-          >
-            Loading Experience
-          </motion.p>
-        </motion.div>
-      )}
+      {/* Servicios */}
+      <section className="px-6 py-24">
+        <h2 className="text-5xl font-black text-center mb-16">Servicios</h2>
 
-      {/* Toast */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: "#0f172a",
-            color: "#fff",
-            border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: "18px",
-            padding: "16px",
-          },
-        }}
-      />
-
-      <div className="min-h-screen bg-black text-white overflow-hidden">
-        {/* Particles */}
-        <Particles
-          id="tsparticles"
-          init={particlesInit}
-          options={{
-            background: {
-              color: {
-                value: "transparent",
-              },
+        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {[
+            {
+              icon: <FaTools />,
+              title: "Mantenimiento",
+              desc: "Optimización y reparación profesional.",
             },
 
-            fpsLimit: 120,
-
-            particles: {
-              color: {
-                value: "#3b82f6",
-              },
-
-              links: {
-                color: "#3b82f6",
-                distance: 150,
-                enable: true,
-                opacity: 0.15,
-                width: 1,
-              },
-
-              move: {
-                direction: "none",
-                enable: true,
-                outModes: {
-                  default: "bounce",
-                },
-                random: false,
-                speed: 1,
-                straight: false,
-              },
-
-              number: {
-                density: {
-                  enable: true,
-                },
-                value: 50,
-              },
-
-              opacity: {
-                value: 0.3,
-              },
-
-              shape: {
-                type: "circle",
-              },
-
-              size: {
-                value: { min: 1, max: 3 },
-              },
+            {
+              icon: <FaLaptopCode />,
+              title: "Software",
+              desc: "Instalación de programas y sistemas.",
             },
 
-            detectRetina: true,
-          }}
-          className="fixed inset-0 z-0"
-        />
-
-        {/* Fondo */}
-        <div className="fixed inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.18),transparent_40%)]"></div>
-
-        {/* Grid */}
-        <div className="fixed inset-0 opacity-20">
-          <div className="absolute top-0 left-0 w-full h-full bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-        </div>
-
-        {/* Navbar */}
-        <header className="sticky top-0 z-50 backdrop-blur-xl border-b border-white/10 bg-black/40">
-          <div className="max-w-7xl mx-auto flex items-center justify-between px-8 py-5">
-            <h1 className="text-2xl font-black tracking-wide">
-              TechLink <span className="text-blue-400">Solutions</span>
-            </h1>
-
-            {/* Desktop Menu */}
-            <nav className="hidden md:flex gap-8 text-white/70">
-              <a href="#inicio" className="hover:text-blue-400 transition-all">
-                Inicio
-              </a>
-
-              <a
-                href="#servicios"
-                className="hover:text-blue-400 transition-all"
-              >
-                Servicios
-              </a>
-
-              <a
-                href="#contacto"
-                className="hover:text-blue-400 transition-all"
-              >
-                Contacto
-              </a>
-            </nav>
-
-            {/* Mobile Button */}
-            <button
-              className="md:hidden text-white"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? <X size={30} /> : <Menu size={30} />}
-            </button>
-          </div>
-        </header>
-
-        {/* Mobile Menu */}
-        {menuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden fixed top-20 left-0 w-full bg-black/95 backdrop-blur-xl border-b border-white/10 z-40"
-          >
-            <div className="flex flex-col p-8 gap-6 text-xl">
-              <a
-                href="#inicio"
-                onClick={() => setMenuOpen(false)}
-                className="hover:text-blue-400 transition-all"
-              >
-                Inicio
-              </a>
-
-              <a
-                href="#servicios"
-                onClick={() => setMenuOpen(false)}
-                className="hover:text-blue-400 transition-all"
-              >
-                Servicios
-              </a>
-
-              <a
-                href="#contacto"
-                onClick={() => setMenuOpen(false)}
-                className="hover:text-blue-400 transition-all"
-              >
-                Contacto
-              </a>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Hero */}
-        <section
-          id="inicio"
-          className="relative z-10 px-8 py-32 max-w-7xl mx-auto grid md:grid-cols-2 gap-16 items-center"
-        >
-          <div>
-            <div className="inline-flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 rounded-full px-5 py-2 text-blue-300 mb-8">
-              Tecnología moderna y soporte profesional
-            </div>
-
-            <h2 className="text-5xl md:text-7xl font-black leading-tight mb-8">
-              Soluciones tecnológicas modernas
-            </h2>
-
-            <p className="text-white/70 text-lg leading-relaxed mb-10 max-w-xl">
-              Reparación, optimización y soporte técnico profesional para
-              computadoras y redes.
-            </p>
-
-            <div className="flex gap-5 flex-wrap">
-              <a
-                href="#contacto"
-                className="bg-blue-500 hover:bg-blue-400 transition-all px-8 py-4 rounded-2xl font-semibold shadow-lg shadow-blue-500/20"
-              >
-                Solicitar soporte
-              </a>
-
-              <a
-                href="#servicios"
-                className="border border-white/10 hover:border-blue-400 hover:text-blue-400 transition-all px-8 py-4 rounded-2xl font-semibold"
-              >
-                Ver servicios
-              </a>
-            </div>
-          </div>
-
-          {/* Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1 }}
-            className="relative flex justify-center"
-          >
-            <div className="absolute w-80 h-80 bg-blue-500/20 blur-3xl rounded-full"></div>
-
-            <div className="relative bg-white/5 border border-white/10 backdrop-blur-2xl rounded-[36px] p-10 w-full max-w-md shadow-2xl">
-              <div className="space-y-6">
-                {[
-                  ["Rendimiento", "98%"],
-                  ["Seguridad", "95%"],
-                  ["Optimización", "100%"],
-                ].map((item, index) => (
-                  <div key={index}>
-                    <div className="flex justify-between mb-2 text-white/70">
-                      <span>{item[0]}</span>
-                      <span>{item[1]}</span>
-                    </div>
-
-                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-400 rounded-full"
-                        style={{ width: item[1] }}
-                      ></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        </section>
-
-        {/* Servicios */}
-        <section
-          id="servicios"
-          className="relative z-10 px-8 py-24 max-w-7xl mx-auto"
-        >
-          <div className="mb-16">
-            <p className="text-blue-400 uppercase tracking-[0.3em] text-sm mb-4">
-              Servicios
-            </p>
-
-            <h2 className="text-4xl md:text-5xl font-black">
-              Soluciones tecnológicas profesionales
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <FaLaptopCode />,
-                title: "Reparación",
-              },
-              {
-                icon: <FaTools />,
-                title: "Mantenimiento",
-              },
-              {
-                icon: <FaShieldAlt />,
-                title: "Optimización",
-              },
-            ].map((service, index) => (
-              <motion.div
-                key={index}
-                whileHover={{ y: -10 }}
-                className="bg-white/5 border border-white/10 rounded-3xl p-8 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500"
-              >
-                <div className="text-blue-400 text-4xl mb-6">
-                  {service.icon}
-                </div>
-
-                <h3 className="text-2xl font-bold mb-4">{service.title}</h3>
-
-                <p className="text-white/60">
-                  Servicio moderno y profesional para tus equipos.
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* Contacto */}
-        <section
-          id="contacto"
-          className="relative z-10 px-8 py-24 max-w-7xl mx-auto"
-        >
-          <div className="mb-16 text-center">
-            <p className="text-blue-400 uppercase tracking-[0.3em] text-sm mb-4">
-              Contacto
-            </p>
-
-            <h2 className="text-4xl md:text-5xl font-black">
-              Hablemos sobre tu proyecto
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-10">
-            {/* Info */}
+            {
+              icon: <FaShieldAlt />,
+              title: "Seguridad",
+              desc: "Protección y eliminación de virus.",
+            },
+          ].map((service, index) => (
             <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
+              whileHover={{
+                scale: 1.03,
+              }}
+              key={index}
               className="bg-white/5 border border-white/10 rounded-[32px] p-10 backdrop-blur-xl"
             >
-              <h3 className="text-3xl font-black mb-8">TechLink Solutions</h3>
+              <div className="text-blue-400 text-5xl mb-8">{service.icon}</div>
 
-              <div className="space-y-6 text-white/70">
-                <div>
-                  <p className="text-white font-semibold mb-1">WhatsApp</p>
+              <h3 className="text-3xl font-bold mb-4">{service.title}</h3>
 
-                  <p>+502 0000-0000</p>
-                </div>
-
-                <div>
-                  <p className="text-white font-semibold mb-1">Facebook</p>
-
-                  <p>TechLink Solutions</p>
-                </div>
-
-                <div>
-                  <p className="text-white font-semibold mb-1">Horarios</p>
-
-                  <p>Lunes a Sábado — 8:00 AM a 6:00 PM</p>
-                </div>
-              </div>
+              <p className="text-white/60">{service.desc}</p>
             </motion.div>
+          ))}
+        </div>
+      </section>
 
-            {/* Form */}
-            <motion.form
-              ref={form}
-              onSubmit={sendEmail}
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
-              className="bg-white/5 border border-white/10 rounded-[32px] p-10 backdrop-blur-xl space-y-6"
-            >
+      {/* Contacto */}
+      <section id="contacto" className="px-6 py-24">
+        <div className="grid lg:grid-cols-2 gap-10 max-w-7xl mx-auto">
+          {/* Info */}
+          <div className="bg-white/5 border border-white/10 rounded-[32px] p-10 backdrop-blur-xl">
+            <h2 className="text-5xl font-black mb-10">TechLink Solutions</h2>
+
+            <div className="space-y-8 text-white/70">
               <div>
-                <label className="block mb-2 text-white/70">Nombre</label>
+                <h3 className="font-bold text-white text-xl mb-2">WhatsApp</h3>
 
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  placeholder="Tu nombre"
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 outline-none focus:border-blue-400 transition-all"
-                />
+                <p>+502 0000-0000</p>
               </div>
 
               <div>
-                <label className="block mb-2 text-white/70">
-                  Correo electrónico
-                </label>
+                <h3 className="font-bold text-white text-xl mb-2">Facebook</h3>
 
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  placeholder="correo@email.com"
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 outline-none focus:border-blue-400 transition-all"
-                />
+                <p>TechLink Solutions</p>
               </div>
 
               <div>
-                <label className="block mb-2 text-white/70">
-                  Problema o proyecto
-                </label>
+                <h3 className="font-bold text-white text-xl mb-2">Servicios</h3>
 
-                <textarea
-                  rows="5"
-                  name="message"
-                  required
-                  placeholder="Describe tu problema..."
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 outline-none focus:border-blue-400 transition-all resize-none"
-                ></textarea>
+                <p>
+                  Reparación, optimización, soporte remoto y mantenimiento
+                  profesional.
+                </p>
               </div>
+            </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-500 hover:bg-blue-400 transition-all py-4 rounded-2xl text-lg font-semibold shadow-lg shadow-blue-500/20"
+            <div className="flex gap-5 mt-10">
+              <a
+                href="#"
+                className="bg-green-500/20 p-5 rounded-2xl hover:scale-110 transition-all"
               >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-3">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    Enviando...
-                  </span>
-                ) : (
-                  "Enviar solicitud"
-                )}
-              </button>
-            </motion.form>
+                <FaWhatsapp className="text-3xl text-green-400" />
+              </a>
+
+              <a
+                href="#"
+                className="bg-blue-500/20 p-5 rounded-2xl hover:scale-110 transition-all"
+              >
+                <FaFacebook className="text-3xl text-blue-400" />
+              </a>
+            </div>
           </div>
-        </section>
 
-        {/* Footer */}
-        <footer className="relative z-10 border-t border-white/10 px-8 py-10 text-center text-white/50">
-          <h3 className="text-2xl font-black text-white mb-3">
-            TechLink Solutions
-          </h3>
+          {/* Form */}
+          <form
+            ref={form}
+            onSubmit={sendEmail}
+            className="bg-white/5 border border-white/10 rounded-[32px] p-10 backdrop-blur-xl space-y-6"
+          >
+            <div>
+              <label className="block text-white/70 mb-2">Nombre</label>
 
-          <p>Tecnología moderna y soporte técnico profesional.</p>
-        </footer>
+              <input
+                type="text"
+                name="name"
+                placeholder="Tu nombre"
+                className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white outline-none focus:border-blue-400 transition-all"
+              />
+            </div>
 
-        {/* WhatsApp */}
-        <a
-          href="https://wa.me/50200000000"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="fixed bottom-6 right-6 bg-green-500 hover:bg-green-400 text-white p-5 rounded-full shadow-2xl shadow-green-500/30 z-50 transition-all hover:scale-110"
-        >
-          <FaWhatsapp className="text-3xl" />
-        </a>
-      </div>
-    </>
+            <div>
+              <label className="block text-white/70 mb-2">
+                Correo electrónico
+              </label>
+
+              <input
+                type="email"
+                name="email"
+                placeholder="correo@email.com"
+                className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white outline-none focus:border-blue-400 transition-all"
+              />
+            </div>
+
+            <div>
+              <label className="block text-white/70 mb-2">
+                Problema o proyecto
+              </label>
+
+              <textarea
+                rows="6"
+                name="message"
+                placeholder="Describe tu problema o proyecto..."
+                className="w-full bg-black/40 border border-white/10 rounded-2xl px-5 py-4 text-white outline-none focus:border-blue-400 transition-all"
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-500 hover:bg-blue-400 transition-all py-5 rounded-2xl text-xl font-semibold shadow-2xl shadow-blue-500/20"
+            >
+              {loading ? "Enviando..." : "Enviar solicitud"}
+            </button>
+          </form>
+        </div>
+      </section>
+    </div>
   );
 }
